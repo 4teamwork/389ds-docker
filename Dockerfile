@@ -100,6 +100,9 @@ COPY --from=build-stage /out /
 RUN mkdir -p /data/config && \
     mkdir -p /data/ssca && \
     mkdir -p /data/run && \
+    chown dirsrv:dirsrv /data/config && \
+    chown dirsrv:dirsrv /data/ssca && \
+    chown dirsrv:dirsrv /data/run && \
     ln -s /data/config /etc/dirsrv/slapd-localhost && \
     ln -s /data/ssca /etc/dirsrv/ssca && \
     ln -s /data/run /var/run/dirsrv
@@ -108,7 +111,7 @@ VOLUME /data
 
 EXPOSE 3389 3636
 
-USER dirsrv
+# USER dirsrv
 
 CMD [ "/usr/libexec/dirsrv/dscontainer", "-r" ]
 HEALTHCHECK --start-period=5m --timeout=5s --interval=5s --retries=2 CMD /usr/libexec/dirsrv/dscontainer -H
