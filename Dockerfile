@@ -1,6 +1,6 @@
-FROM alpine:3.13 as build-stage
+FROM alpine:3.14 as build-stage
 
-ARG VERSION=2.0.4
+ARG VERSION=2.0.7
 
 RUN apk add --no-cache \
     autoconf \
@@ -74,7 +74,7 @@ RUN cd 389-ds-base-389-ds-base-${VERSION} && \
 RUN rm -rf /out/dirsrv@.service.d
 
 
-FROM alpine:3.13
+FROM alpine:3.14
 
 RUN apk add --no-cache \
     ca-certificates \
@@ -94,7 +94,7 @@ RUN apk add --no-cache \
 
 RUN adduser -D -h /var/run/dirsrv dirsrv
 
-COPY --from=build-stage /usr/lib/python3.8/site-packages/ /usr/lib/python3.8/site-packages/
+COPY --from=build-stage /usr/lib/python3.9/site-packages/ /usr/lib/python3.9/site-packages/
 COPY --from=build-stage /out /
 
 RUN mkdir -p /data/config && \
