@@ -1,6 +1,6 @@
 FROM alpine:3.14 as build-stage
 
-ARG VERSION=2.0.7
+ARG VERSION=2.0.10
 
 RUN apk add --no-cache \
     autoconf \
