@@ -2,12 +2,12 @@ version: "3"
 
 services:
   389ds:
-    image: 4teamwork/389ds:${DS389_VERSION:-2.0.10}
+    image: 4teamwork/389ds:${DS389_VERSION:-2.0.14}
     build:
       context: .
       dockerfile: ./Dockerfile
       args:
-        - VERSION=${DS389_VERSION:-2.0.10}
+        - VERSION=${DS389_VERSION:-2.0.14}
     ports:
       - 10389:3389
       - 10636:3636
