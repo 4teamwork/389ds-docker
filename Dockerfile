@@ -63,7 +63,14 @@ RUN cd 389-ds-base-389-ds-base-${VERSION} && \
         --with-openldap \
         --with-pythonexec=python3 \
         --without-selinux \
-        --without-systemd \
+        --without-systemd
+
+# concread requires switching to edition 2021
+RUN cd 389-ds-base-389-ds-base-${VERSION} && \
+    make; exit 0
+RUN sed -i '11 a\cargo-features = ["edition2021"]' /root/.cargo/registry/src/github.com-1ecc6299db9ec823/concread-0.2.21/Cargo.toml
+
+RUN cd 389-ds-base-389-ds-base-${VERSION} && \
     make && \
     make lib389 && \
     make check && \
