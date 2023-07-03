@@ -1,0 +1,29 @@
+--- a/ldap/servers/slapd/log.c
++++ b/ldap/servers/slapd/log.c
+@@ -33,7 +33,6 @@
+ #define _PSEP '/'
+ #include <json-c/json.h>
+ #include <assert.h>
+-#include <execinfo.h>
+ 
+ #ifdef SYSTEMTAP
+ #include <sys/sdt.h>
+@@ -2892,18 +2891,6 @@
+ void
+ slapi_log_backtrace(int loglevel)
+ {
+-    if (slapi_is_loglevel_set(loglevel)) {
+-        void *frames[100];
+-        int nbframes = backtrace(frames, (sizeof frames)/sizeof frames[0]);
+-        char **symbols = backtrace_symbols(frames, nbframes);
+-        if (symbols) {
+-            /* Logs 1 line per frames to avoid risking log message truncation */
+-            for (size_t i=0; i<nbframes; i++) {
+-               slapi_log_err(loglevel, "slapi_log_backtrace", "\t[%ld]\t%s\n", i, symbols[i]);
+-            }
+-            free(symbols);
+-        }
+-    }
+ }
+ 
+ 

@@ -1,6 +1,6 @@
-FROM alpine:3.14 as build-stage
+FROM alpine:3.18 as build-stage
 
-ARG VERSION=2.0.14
+ARG VERSION=2.4.1
 
 RUN apk add --no-cache \
     autoconf \
@@ -8,67 +8,66 @@ RUN apk add --no-cache \
     build-base \
     bzip2-dev \
     cargo \
-    cmocka-dev \
-    clang \
+    clang16 \
     compiler-rt \
     cracklib-dev \
     cyrus-sasl-dev \
     db-dev \
-    doxygen \
     icu-dev \
+    json-c-dev \
     krb5-dev \
     libatomic \
-    libevent-dev \
     libtool \
     linux-pam-dev \
     lld \
+    lmdb-dev \
     net-snmp-dev \
     nspr-dev \
     nss-dev \
     openldap-dev \
     openssl-dev \
-    pcre-dev \
-    pkgconf \
+    pcre2-dev \
     python3 \
     python3-dev \
+    py3-argcomplete \
+    py3-cryptography \
     py3-dateutil \
     py3-pip \
+    py3-pyldap \
     py3-setuptools \
-    rust \
-    zlib-dev
+    rust
 
 RUN pip3 install \
     argparse_manpage \
-    argcomplete \
-    python-ldap \
     pyasn1 \
     pyasn1-modules
+
+RUN mkdir /build
+WORKDIR /build
 
 RUN wget https://github.com/389ds/389-ds-base/archive/refs/tags/389-ds-base-${VERSION}.tar.gz && \
     tar xzvf 389-ds-base-${VERSION}.tar.gz
 
-RUN cd 389-ds-base-389-ds-base-${VERSION} && \
-    autoreconf -fiv && \
-    ./configure \
-        --build=x86_64-pc-linux-musl \
-        --host=x86_64-pc-linux-musl \
-        --prefix=/usr \
-        --sysconfdir=/etc \
-        --localstatedir=/var \
-        --enable-cmocka \
-        --enable-rust \
-        --enable-clang \
-        --disable-cockpit \
-        --disable-dependency-tracking \
-        --with-openldap \
-        --with-pythonexec=python3 \
-        --without-selinux \
-        --without-systemd
+COPY remove_execinfo.patch /build
 
-# concread requires switching to edition 2021
 RUN cd 389-ds-base-389-ds-base-${VERSION} && \
-    make; exit 0
-RUN sed -i '11 a\cargo-features = ["edition2021"]' /root/.cargo/registry/src/github.com-1ecc6299db9ec823/concread-0.2.21/Cargo.toml
+    patch -p 1 -i ../remove_execinfo.patch
+
+RUN cd 389-ds-base-389-ds-base-${VERSION} && \
+     autoreconf -fiv && \
+     ./configure \
+         --build=x86_64-pc-linux-musl \
+         --host=x86_64-pc-linux-musl \
+         --prefix=/usr \
+         --sysconfdir=/etc \
+         --localstatedir=/var \
+         --enable-clang \
+         --disable-cockpit \
+         --disable-dependency-tracking \
+         --with-openldap \
+         --with-pythonexec=python3 \
+         --without-selinux \
+         --without-systemd
 
 RUN cd 389-ds-base-389-ds-base-${VERSION} && \
     make && \
@@ -80,28 +79,34 @@ RUN cd 389-ds-base-389-ds-base-${VERSION} && \
 
 RUN rm -rf /out/dirsrv@.service.d
 
+CMD ["/bin/sh"]
 
-FROM alpine:3.14
+
+FROM alpine:3.18
 
 RUN apk add --no-cache \
     ca-certificates \
     cracklib \
     db \
     icu-libs \
+    json-c \
     krb5 \
     libgcc \
     libldap \
     linux-pam \
+    lmdb \
+    net-snmp-libs \
+    net-snmp-agent-libs \
     nspr \
     nss-tools \
     openldap-clients \
     openssl \
-    pcre \
+    pcre2 \
     python3
 
 RUN adduser -D -h /var/run/dirsrv dirsrv
 
-COPY --from=build-stage /usr/lib/python3.9/site-packages/ /usr/lib/python3.9/site-packages/
+COPY --from=build-stage /usr/lib/python3.11/site-packages/ /usr/lib/python3.11/site-packages/
 COPY --from=build-stage /out /
 
 RUN mkdir -p /data/config && \
