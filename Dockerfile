@@ -1,6 +1,14 @@
-FROM alpine:3.18 as build-stage
+FROM alpine:3.20 as alpine-upgrader
+RUN apk upgrade --no-cache
 
-ARG VERSION=2.4.4
+FROM scratch as alpine-upgraded
+COPY --from=alpine-upgrader / /
+CMD ["/bin/sh"]
+
+
+FROM alpine-upgraded as build-stage
+
+ARG VERSION=2.4.5
 
 RUN apk add --no-cache \
     autoconf \
@@ -37,7 +45,7 @@ RUN apk add --no-cache \
     py3-setuptools \
     rust
 
-RUN pip3 install \
+RUN pip3 install --break-system-packages \
     argparse_manpage \
     pyasn1 \
     pyasn1-modules
@@ -82,7 +90,7 @@ RUN rm -rf /out/dirsrv@.service.d
 CMD ["/bin/sh"]
 
 
-FROM alpine:3.18
+FROM alpine-upgraded
 
 RUN apk add --no-cache \
     ca-certificates \
@@ -106,7 +114,7 @@ RUN apk add --no-cache \
 
 RUN adduser -D -h /var/run/dirsrv dirsrv
 
-COPY --from=build-stage /usr/lib/python3.11/site-packages/ /usr/lib/python3.11/site-packages/
+COPY --from=build-stage /usr/lib/python3.12/site-packages/ /usr/lib/python3.12/site-packages/
 COPY --from=build-stage /out /
 
 RUN mkdir -p /data/config && \
